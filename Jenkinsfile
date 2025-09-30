@@ -47,7 +47,7 @@ pipeline {
                 usernameVariable: 'DOCKERHUB_USER')]) {
     // some block
                 sh '''
-                   docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                   docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKERHUB_PASSWORD}/${IMAGE_NAME}:${IMAGE_TAG}
                    docker login -u DOCKERHUB_USER -p DOCKERHUB_PASSWORD
                    docker push ${DOCKERHUB_USER}/{IMAGE_NAME}:${IMAGE_TAG}
 
