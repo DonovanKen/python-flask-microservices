@@ -38,6 +38,27 @@ pipeline {
             }
         }
       }
+      stage('push Image') {
+        steps {
+            script {
+                withCredentials([usernamePassword(
+                credentialsId: 'github_credentials', 
+                passwordVariable: 'DOCKERHUB_PASSWORD', 
+                usernameVariable: 'DOCKERHUB_USER')]) {
+    // some block
+                sh '''
+                   docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                   docker login -u DOCKERHUB_USER -p DOCKERHUB_PASSWORD
+                   docker push ${DOCKERHUB_USER}/{IMAGE_NAME}:${IMAGE_TAG}
+
+                '''
+                }
+
+
+            }
+        }
+      }
+
         
     }
 
