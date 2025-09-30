@@ -38,28 +38,35 @@ pipeline {
             }
         }
       }
-      stage('push Image') {
+
+      stage('Deploy') {
+        environment {
+            DOCKERHUB_USER = "mrkendono"
+            IMAGE_NAME      = "frontend"
+            IMAGE_TAG       = "latest"
+            CONTAINER_NAME  = "frontend_container"
+        }
         steps {
-            script {
-                withCredentials([usernamePassword(
-                credentialsId: 'github_credentials',
-                passwordVariable: 'DOCKERHUB_PASSWORD',
-                usernameVariable: 'DOCKERHUB_USER')]) {
-    // some block
+            sshagent(credentials: ['ssh-cred']) {
                 sh '''
-                   docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                   docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
-                   docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                    command1="docker pull $DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG"
+                    command2="docker rm -f $CONTAINER_NAME"
+                    command3="docker run -d -p 5000:5000 --name $CONTAINER_NAME $IMAGE_NAME:$IMAGE_TAG"
+                    [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+                    ssh-keyscan -t rsa,dsa 192.168.2.69 >> ~/.ssh/known_hosts
 
+                    ssh ub2@192.168.2.69 \
+                        -o SendEnv=DOCKERHUB_USER \
+                        -o SendEnv=IMAGE_NAME \
+                        -o SendEnv=IMAGE_TAG \
+                        -o SendEnv=CONTAINER_NAME \
+                        -C "$command1 && $command2 && $command3"
                 '''
-                }
+               }
+           }
 
-
-            }
+      
+               
         }
       }
-
-        
-    }
-
 }
