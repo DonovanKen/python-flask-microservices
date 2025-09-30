@@ -11,7 +11,7 @@ parameters {
 
 }
 
-stage {
+stages {
     stage('Build Image')
       steps {
         script {
