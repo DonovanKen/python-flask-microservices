@@ -49,7 +49,7 @@ pipeline {
                 sh '''
                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${DOCKERHUB_PASSWORD}/${IMAGE_NAME}:${IMAGE_TAG}
                    docker login -u DOCKERHUB_USER -p DOCKERHUB_PASSWORD
-                   docker push ${DOCKERHUB_USER}/{IMAGE_NAME}:${IMAGE_TAG}
+                   docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
 
                 '''
                 }
