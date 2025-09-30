@@ -6,7 +6,7 @@ pipeline {
        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'this is my docker tag name')
        string(name: 'CONTAINER_NAME', defaultValue: 'frontend_container', description: 'this is my docker container name')
        string(name: 'GITHUB_USER', defaultValue: 'DonovanKen', description: 'user')
-       string(name: 'DOCKER_HUB_USER', defaultValue: 'mrkendono', description: 'gocker hub')
+       string(name: 'DOCKERHUB_USER', defaultValue: 'mrkendono', description: 'gocker hub')
 
 
     }
