@@ -34,6 +34,8 @@ pipeline {
 
                    echo "delete tested container..."
                    docker rm -f ${CONTAINER_NAME}
+
+                    echo "End..."
                 '''
             }
         }
