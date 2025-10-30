@@ -17,16 +17,31 @@ pipeline {
       stage('Build Image') {
         steps {
           script {
-           // Pass all required parameters
            dockerBuild("$FRONTEND", "$ORDERSERVICE", "$IMAGE_TAG")
           }
+        }
+      }
+      
+      stage('Push to Docker Hub') {
+        steps {
+            script {
+                // Login to Docker Hub (you'll need to add dockerhub credentials to Jenkins)
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        docker login -u $DOCKER_USER -p $DOCKER_PASS
+                        docker tag ${params.FRONTEND}:${params.IMAGE_TAG} ${params.DOCKERHUB_USER}/${params.FRONTEND}:${params.IMAGE_TAG}
+                        docker push ${params.DOCKERHUB_USER}/${params.FRONTEND}:${params.IMAGE_TAG}
+                        docker tag ${params.ORDERSERVICE}:${params.IMAGE_TAG} ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG}
+                        docker push ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG}
+                    """
+                }
+            }
         }
       }
 
       stage('Run Container Test') {
         steps {
             script {
-                // Pass all required parameters  
                 testimage("$FRONTEND", "$ORDERSERVICE", "$IMAGE_TAG", "$CONTAINER_FRONTEND", "$CONTAINER_ORDERSERVICE")
             }
         }
