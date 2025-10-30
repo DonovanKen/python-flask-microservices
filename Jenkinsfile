@@ -6,9 +6,11 @@ pipeline {
     parameters {
        string(name: 'FRONTEND', defaultValue: 'frontend', description: 'this is my docker image name for frontend')
        string(name: 'ORDERSERVICE', defaultValue: 'orderservice', description: 'this is my docker image for order service')
+       string(name: 'PRODUCTSERVICE', defaultValue: 'productservice', description: 'this is my docker image for product service')
        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'this is my docker tag name')
        string(name: 'CONTAINER_FRONTEND', defaultValue: 'frontend_container', description: 'this is my docker container name for frontend')
        string(name: 'CONTAINER_ORDERSERVICE', defaultValue: 'orderservice_container', description: 'this is my docker container name for orderservice')
+       string(name: 'CONTAINER_PRODUCTSERVICE', defaultValue: 'productservice_container', description: 'this is my docker container name for productservice')
        string(name: 'GITHUB_USER', defaultValue: 'DonovanKen', description: 'user')
        string(name: 'DOCKERHUB_USER', defaultValue: 'mrkendono', description: 'docker hub')
     }
@@ -17,7 +19,7 @@ pipeline {
       stage('Build Image') {
         steps {
           script {
-           dockerBuild("$FRONTEND", "$ORDERSERVICE", "$IMAGE_TAG")
+           dockerBuild("$FRONTEND", "$ORDERSERVICE", "$PRODUCTSERVICE", "$IMAGE_TAG")
           }
         }
       }
@@ -36,6 +38,12 @@ pipeline {
                     docker tag ${params.ORDERSERVICE}:${params.IMAGE_TAG} ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG}
                     docker push ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG}
                 """
+
+                // Tag and push productservice
+                sh """
+                    docker tag ${params.PRODUCTSERVICE}:${params.IMAGE_TAG} ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG}
+                    docker push ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG}
+                """
             }
         }
       }
@@ -43,7 +51,7 @@ pipeline {
       stage('Run Container Test') {
         steps {
             script {
-                testimage("$FRONTEND", "$ORDERSERVICE", "$IMAGE_TAG", "$CONTAINER_FRONTEND", "$CONTAINER_ORDERSERVICE")
+                testimage("$FRONTEND", "$ORDERSERVICE", "$PRODUCTSERVICE", "$IMAGE_TAG", "$CONTAINER_FRONTEND", "$CONTAINER_ORDERSERVICE", "$CONTAINER_PRODUCTSERVICE")
             }
         }
       }
@@ -71,6 +79,16 @@ pipeline {
                         docker pull ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG} &&
                         docker rm -f ${params.CONTAINER_ORDERSERVICE} || true &&
                         docker run -d -p 5003:5003 --name ${params.CONTAINER_ORDERSERVICE} ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG}
+                    "
+                """
+
+
+                // Deploy productservice
+                sh """
+                    ssh ken3@192.168.2.70 "
+                        docker pull ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG} &&
+                        docker rm -f ${params.CONTAINER_PRODUCTSERVICE} || true &&
+                        docker run -d -p 5003:5003 --name ${params.CONTAINER_PRODUCTSERVICE} ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG}
                     "
                 """
             }
