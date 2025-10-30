@@ -15,6 +15,7 @@ pipeline {
        string(name: 'CONTAINER_USERSERVICE', defaultValue: 'user_container', description: 'this is my docker container name for userservice')
        string(name: 'GITHUB_USER', defaultValue: 'DonovanKen', description: 'user')
        string(name: 'DOCKERHUB_USER', defaultValue: 'mrkendono', description: 'docker hub')
+       string(name: 'K8S_NAMESPACE', defaultValue: 'default', description: 'Kubernetes namespace')
     }
     
     stages {
@@ -64,52 +65,79 @@ pipeline {
         }
       }
 
-      stage('Deploy') {
+      stage('Deploy to Kubernetes') {
         steps {
             sshagent(credentials: ['ssh-cred']) {
                 sh '''
                     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
-                    ssh-keyscan -t rsa,dsa 192.168.2.70 >> ~/.ssh/known_hosts
+                    ssh-keyscan -t rsa,dsa 192.168.2.88 >> ~/.ssh/known_hosts
                 '''
                 
-                // Deploy frontend
+                // Copy k8s manifests to target server and deploy
                 sh """
-                    ssh ken3@192.168.2.70 "
-                        docker pull ${params.DOCKERHUB_USER}/${params.FRONTEND}:${params.IMAGE_TAG} &&
-                        docker rm -f ${params.CONTAINER_FRONTEND} || true &&
-                        docker run -d -p 5000:5000 --name ${params.CONTAINER_FRONTEND} ${params.DOCKERHUB_USER}/${params.FRONTEND}:${params.IMAGE_TAG}
+                    # Copy k8s directory to target server
+                    scp -r k8s/ kubernetes@192.168.2.88:/tmp/k8s-manifests/
+                    
+                    # Deploy to Kubernetes
+                    ssh kubernetes@192.168.2.88 "
+                        cd /tmp/k8s-manifests
+                        
+                        # Apply all Kubernetes manifests
+                        kubectl apply -f frontend-deployment.yaml
+                        kubectl apply -f userservice-deployment.yaml  
+                        kubectl apply -f productservice-deployment.yaml
+                        kubectl apply -f orderservice-deployment.yaml
+                        
+                        # Wait for deployments to be ready
+                        kubectl wait --for=condition=available deployment/frontend-deployment --timeout=300s
+                        kubectl wait --for=condition=available deployment/userservice-deployment --timeout=300s
+                        kubectl wait --for=condition=available deployment/productservice-deployment --timeout=300s
+                        kubectl wait --for=condition=available deployment/orderservice-deployment --timeout=300s
+                        
+                        # Show deployment status
+                        echo '=== Deployment Status ==='
+                        kubectl get deployments
+                        
+                        echo '=== Service Status ==='
+                        kubectl get services
+                        
+                        echo '=== Pod Status ==='
+                        kubectl get pods
                     "
                 """
-                
-                // Deploy orderservice
+            }
+        }
+      }
+      
+      stage('Verify Deployment') {
+        steps {
+            sshagent(credentials: ['ssh-cred']) {
                 sh """
-                    ssh ken3@192.168.2.70 "
-                        docker pull ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG} &&
-                        docker rm -f ${params.CONTAINER_ORDERSERVICE} || true &&
-                        docker run -d -p 5003:5003 --name ${params.CONTAINER_ORDERSERVICE} ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG}
-                    "
-                """
-
-
-                // Deploy productservice
-                sh """
-                    ssh ken3@192.168.2.70 "
-                        docker pull ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG} &&
-                        docker rm -f ${params.CONTAINER_PRODUCTSERVICE} || true &&
-                        docker run -d -p 5002:5002 --name ${params.CONTAINER_PRODUCTSERVICE} ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG}
-                    "
-                """
-
-                // Deploy userservice
-                sh """
-                    ssh ken3@192.168.2.70 "
-                        docker pull ${params.DOCKERHUB_USER}/${params.USERSERVICE}:${params.IMAGE_TAG} &&
-                        docker rm -f ${params.CONTAINER_USERSERVICE} || true &&
-                        docker run -d -p 5001:5001 --name ${params.CONTAINER_USERSERVICE} ${params.DOCKERHUB_USER}/${params.USERSERVICE}:${params.IMAGE_TAG}
+                    ssh kubernetes@192.168.2.88 "
+                        echo '=== Final Deployment Status ==='
+                        kubectl get all
+                        
+                        echo '=== Pod Details ==='
+                        kubectl get pods -o wide
+                        
+                        echo '=== Service URLs ==='
+                        kubectl get services
                     "
                 """
             }
         }
       }
     }
-}
+    
+    post {
+        always {
+            echo 'Pipeline completed - check Kubernetes deployment status'
+        }
+        success {
+            echo 'All microservices deployed successfully to Kubernetes!'
+        }
+        failure {
+            echo 'Deployment failed - check Kubernetes logs'
+        }
+    }
+}i
