@@ -60,9 +60,10 @@ pipeline {
                         -o SendEnv=CONTAINER_FRONTEND \
                         -C "$command1 && $command2 && $command3"
                 '''
+               }
 
-
-                sh '''
+                sshagent(credentials: ['ssh-cred']) {
+                   sh '''
                     command01="docker pull $DOCKERHUB_USER/$ORDERSERVICE:$IMAGE_TAG"
                     command02="docker rm -f $CONTAINER_ORDERSERVICE"
                     command03="docker run -d -p 5003:5003 --name $CONTAINER_ORDERSERVICE $DOCKERHUB_USER/$ORDERSERVICE:$IMAGE_TAG"
@@ -83,4 +84,6 @@ pipeline {
                
         }
       }
+
+
 }
