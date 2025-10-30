@@ -81,7 +81,7 @@ pipeline {
                 sh '''
                     command01="docker pull $DOCKERHUB_USER/$ORDERSERVICE:$IMAGE_TAG"
                     command02="docker rm -f $CONTAINER_ORDERSERVICE"
-                    command03="docker run -d -p 5000:5000 --name $CONTAINER_ORDERSERVICE $DOCKERHUB_USER/$ORDERSERVICE:$IMAGE_TAG"
+                    command03="docker run -d -p 5003:5003 --name $CONTAINER_ORDERSERVICE $DOCKERHUB_USER/$ORDERSERVICE:$IMAGE_TAG"
                     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
                     ssh-keyscan -t rsa,dsa 192.168.2.70 >> ~/.ssh/known_hosts
 
