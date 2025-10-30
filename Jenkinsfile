@@ -67,7 +67,7 @@ pipeline {
 
       stage('Deploy to Kubernetes') {
         steps {
-            sshagent(credentials: ['ssh-cred']) {
+            sshagent(credentials: ['ssh-cred1']) {
                 sh '''
                     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
                     ssh-keyscan -t rsa,dsa 192.168.2.88 >> ~/.ssh/known_hosts
