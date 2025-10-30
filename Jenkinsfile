@@ -59,7 +59,7 @@ pipeline {
       stage('Run Container Test') {
         steps {
             script {
-                testimage("$FRONTEND", "$ORDERSERVICE", "$PRODUCTSERVICE", "$USERSERVICE", "$IMAGE_TAG", "$CONTAINER_FRONTEND", "$CONTAINER_ORDERSERVICE", "$CONTAINER_PRODUCTSERVICE", "$USERSERVICE_PRODUCTSERVICE")
+                testimage("$FRONTEND", "$ORDERSERVICE", "$PRODUCTSERVICE", "$USERSERVICE", "$IMAGE_TAG", "$CONTAINER_FRONTEND", "$CONTAINER_ORDERSERVICE", "$CONTAINER_PRODUCTSERVICE", "$CONTAINER_USERSERVICE")
             }
         }
       }
@@ -104,8 +104,8 @@ pipeline {
                 sh """
                     ssh ken3@192.168.2.70 "
                         docker pull ${params.DOCKERHUB_USER}/${params.USERSERVICE}:${params.IMAGE_TAG} &&
-                        docker rm -f ${params.USERSERVICE_PRODUCTSERVICE} || true &&
-                        docker run -d -p 5001:5001 --name ${params.USERSERVICE_PRODUCTSERVICE} ${params.DOCKERHUB_USER}/${params.USERSERVICE}:${params.IMAGE_TAG}
+                        docker rm -f ${params.CONTAINER_USERSERVICE} || true &&
+                        docker run -d -p 5001:5001 --name ${params.CONTAINER_USERSERVICE} ${params.DOCKERHUB_USER}/${params.USERSERVICE}:${params.IMAGE_TAG}
                     "
                 """
             }
