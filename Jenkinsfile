@@ -41,7 +41,7 @@ pipeline {
             ORDERSERVICE      = "orderservice"
             IMAGE_TAG         = "latest"
             CONTAINER_FRONTEND    = "frontend_container"
-            CONTAINER_ORDERSERVICE    = "frontend_container"
+            CONTAINER_ORDERSERVICE    = "orderservice_container"
         }
         steps {
         
