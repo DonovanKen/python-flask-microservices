@@ -88,7 +88,7 @@ pipeline {
                     ssh ken3@192.168.2.70 "
                         docker pull ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG} &&
                         docker rm -f ${params.CONTAINER_PRODUCTSERVICE} || true &&
-                        docker run -d -p 5003:5003 --name ${params.CONTAINER_PRODUCTSERVICE} ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG}
+                        docker run -d -p 5002:5002 --name ${params.CONTAINER_PRODUCTSERVICE} ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG}
                     "
                 """
             }
