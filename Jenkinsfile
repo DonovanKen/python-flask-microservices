@@ -111,7 +111,7 @@ pipeline {
       
       stage('Verify Deployment') {
         steps {
-            sshagent(credentials: ['ssh-cred']) {
+            sshagent(credentials: ['ssh-cred1']) {
                 sh """
                     ssh kubernetes@192.168.2.88 "
                         echo '=== Final Deployment Status ==='
@@ -140,4 +140,4 @@ pipeline {
             echo 'Deployment failed - check Kubernetes logs'
         }
     }
-}i
+}
