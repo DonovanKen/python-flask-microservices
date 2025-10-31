@@ -67,6 +67,9 @@ pipeline {
                 '''
                 
                 sh """
+                    # Create directory on remote server first
+                    ssh -o StrictHostKeyChecking=no kubernetes@192.168.2.88 'mkdir -p /tmp/k8s-manifests/'
+                    
                     # Copy k8s manifests to target server
                     scp -r k8s/ kubernetes@192.168.2.88:/tmp/k8s-manifests/
                     
