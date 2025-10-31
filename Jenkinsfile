@@ -30,25 +30,18 @@ pipeline {
       stage('Push Images to Docker Hub') {
         steps {
             script {
-                // Tag and push frontend
                 sh """
                     docker tag ${params.FRONTEND}:${params.IMAGE_TAG} ${params.DOCKERHUB_USER}/${params.FRONTEND}:${params.IMAGE_TAG}
                     docker push ${params.DOCKERHUB_USER}/${params.FRONTEND}:${params.IMAGE_TAG}
                 """
-                
-                // Tag and push orderservice
                 sh """
                     docker tag ${params.ORDERSERVICE}:${params.IMAGE_TAG} ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG}
                     docker push ${params.DOCKERHUB_USER}/${params.ORDERSERVICE}:${params.IMAGE_TAG}
                 """
-
-                // Tag and push productservice
                 sh """
                     docker tag ${params.PRODUCTSERVICE}:${params.IMAGE_TAG} ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG}
                     docker push ${params.DOCKERHUB_USER}/${params.PRODUCTSERVICE}:${params.IMAGE_TAG}
                 """
-
-                // Tag and push userservice
                 sh """
                     docker tag ${params.USERSERVICE}:${params.IMAGE_TAG} ${params.DOCKERHUB_USER}/${params.USERSERVICE}:${params.IMAGE_TAG}
                     docker push ${params.DOCKERHUB_USER}/${params.USERSERVICE}:${params.IMAGE_TAG}
@@ -73,61 +66,26 @@ pipeline {
                     ssh-keyscan -t rsa,dsa 192.168.2.88 >> ~/.ssh/known_hosts
                 '''
                 
-                // Copy k8s manifests to target server and deploy
                 sh """
-                    # Copy k8s directory to target server
+                    # Copy k8s manifests to target server
                     scp -r k8s/ kubernetes@192.168.2.88:/tmp/k8s-manifests/
                     
                     # Deploy to Kubernetes
                     ssh kubernetes@192.168.2.88 "
                         cd /tmp/k8s-manifests
-                        
-                        # Apply all Kubernetes manifests
-                        kubectl apply -f frontend-deployment.yaml
-                        kubectl apply -f userservice-deployment.yaml  
-                        kubectl apply -f productservice-deployment.yaml
-                        kubectl apply -f orderservice-deployment.yaml
-                        
-                        # Wait for deployments to be ready
+                        echo 'Applying Kubernetes manifests...'
+                        kubectl apply -f .
+                        echo 'Waiting for deployments to be ready...'
                         kubectl wait --for=condition=available deployment/frontend-deployment --timeout=300s
                         kubectl wait --for=condition=available deployment/userservice-deployment --timeout=300s
                         kubectl wait --for=condition=available deployment/productservice-deployment --timeout=300s
                         kubectl wait --for=condition=available deployment/orderservice-deployment --timeout=300s
-                        
-                        # Show deployment status
                         echo '=== Deployment Status ==='
                         kubectl get deployments
-                        
-                        echo '=== Service Status ==='
-                        kubectl get services
-                        
                         echo '=== Pod Status ==='
                         kubectl get pods
-                    "
-                """
-            }
-        }
-      }
-      
-      stage('Verify Deployment') {
-        steps {
-            sshagent(credentials: ['ssh-cred1']) {
-                sh """
-                    ssh kubernetes@192.168.2.88 "
-                        echo '=== Final Deployment Status ==='
-                        kubectl get all
-                        
-                        echo '=== Pod Details ==='
-                        kubectl get pods -o wide
-                        
-                        echo '=== Service URLs ==='
+                        echo '=== Service Status ==='
                         kubectl get services
-                        
-                        echo '=== Checking Pod Logs ==='
-                        kubectl logs -l app=frontend --tail=10
-                        kubectl logs -l app=userservice --tail=10
-                        kubectl logs -l app=productservice --tail=10
-                        kubectl logs -l app=orderservice --tail=10
                     "
                 """
             }
