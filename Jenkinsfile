@@ -59,41 +59,44 @@ pipeline {
       }
 
       stage('Deploy to Kubernetes') {
-        steps {
-            sshagent(credentials: ['ssh-cred1']) {
-                sh '''
-                    [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
-                    ssh-keyscan -t rsa,dsa 192.168.2.88 >> ~/.ssh/known_hosts
-                '''
+    steps {
+        sshagent(credentials: ['ssh-cred1']) {
+            sh '''
+                [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+                ssh-keyscan -t rsa,dsa 192.168.2.88 >> ~/.ssh/known_hosts
+            '''
+            
+            sh """
+                # Create directory on remote server first
+                ssh -o StrictHostKeyChecking=no kubernetes@192.168.2.88 'mkdir -p /tmp/k8s-manifests/'
                 
-                sh """
-                    # Create directory on remote server first
-                    ssh -o StrictHostKeyChecking=no kubernetes@192.168.2.88 'mkdir -p /tmp/k8s-manifests/'
-                    
-                    # Copy k8s manifests to target server
-                    scp -r k8s/ kubernetes@192.168.2.88:/tmp/k8s-manifests/
-                    
-                    # Deploy to Kubernetes
-                    ssh kubernetes@192.168.2.88 "
-                        cd /tmp/k8s-manifests
-                        echo 'Applying Kubernetes manifests...'
-                        kubectl apply -f .
-                        echo 'Waiting for deployments to be ready...'
-                        kubectl wait --for=condition=available deployment/frontend-deployment --timeout=300s
-                        kubectl wait --for=condition=available deployment/userservice-deployment --timeout=300s
-                        kubectl wait --for=condition=available deployment/productservice-deployment --timeout=300s
-                        kubectl wait --for=condition=available deployment/orderservice-deployment --timeout=300s
-                        echo '=== Deployment Status ==='
-                        kubectl get deployments
-                        echo '=== Pod Status ==='
-                        kubectl get pods
-                        echo '=== Service Status ==='
-                        kubectl get services
-                    "
-                """
-            }
+                # Copy k8s manifests to target server
+                scp -r k8s/ kubernetes@192.168.2.88:/tmp/k8s-manifests/
+                
+                # Deploy to Kubernetes - FIXED PATH
+                ssh kubernetes@192.168.2.88 "
+                    cd /tmp/k8s-manifests/k8s
+                    echo '=== Current directory and files ==='
+                    pwd
+                    ls -la
+                    echo '=== Applying Kubernetes manifests ==='
+                    kubectl apply -f .
+                    echo '=== Waiting for deployments to be ready ==='
+                    kubectl wait --for=condition=available deployment/frontend-deployment --timeout=300s
+                    kubectl wait --for=condition=available deployment/userservice-deployment --timeout=300s
+                    kubectl wait --for=condition=available deployment/productservice-deployment --timeout=300s
+                    kubectl wait --for=condition=available deployment/orderservice-deployment --timeout=300s
+                    echo '=== Deployment Status ==='
+                    kubectl get deployments
+                    echo '=== Pod Status ==='
+                    kubectl get pods
+                    echo '=== Service Status ==='
+                    kubectl get services
+                "
+            """
         }
-      }
+    }
+}
     }
     
     post {
