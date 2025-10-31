@@ -67,7 +67,7 @@ pipeline {
 
       stage('Deploy to Kubernetes') {
         steps {
-            sshagent(credentials: ['ssh-cred']) {
+            sshagent(credentials: ['ssh-cred1']) {
                 sh '''
                     [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
                     ssh-keyscan -t rsa,dsa 192.168.2.88 >> ~/.ssh/known_hosts
@@ -111,7 +111,7 @@ pipeline {
       
       stage('Verify Deployment') {
         steps {
-            sshagent(credentials: ['ssh-cred']) {
+            sshagent(credentials: ['ssh-cred1']) {
                 sh """
                     ssh kubernetes@192.168.2.88 "
                         echo '=== Final Deployment Status ==='
@@ -122,6 +122,12 @@ pipeline {
                         
                         echo '=== Service URLs ==='
                         kubectl get services
+                        
+                        echo '=== Checking Pod Logs ==='
+                        kubectl logs -l app=frontend --tail=10
+                        kubectl logs -l app=userservice --tail=10
+                        kubectl logs -l app=productservice --tail=10
+                        kubectl logs -l app=orderservice --tail=10
                     "
                 """
             }
