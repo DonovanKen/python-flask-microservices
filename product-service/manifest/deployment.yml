@@ -14,9 +14,9 @@ spec:
     spec:
       containers:
         - name: cuser-service
-          image: mrkendono/user:latest
+          image: mrkendono/product:latest
           ports:
-            - containerPort: 5001
+            - containerPort: 5002
           env:
             - name: DB_HOST
               value: user-db
