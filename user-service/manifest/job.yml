@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
         - name: migrate
-          image: franklinfoko/user:latest
+          image: mrkendono/frontend:latest
           command: ["sh", "-c"]
           args:
             - flask db init && flask db migrate && flask db upgrade
