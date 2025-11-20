@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: cuser-service
-          image: franklinfoko/user:latest
+          image: mrkendono/frontend:latest
           ports:
             - containerPort: 5001
           env:
