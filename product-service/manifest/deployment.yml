@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cuser-service
+  name: cproduct-service
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: cuser-service
+      app: cproduct-service
   template:
     metadata:
       labels:
-        app: cuser-service
+        app: cproduct-service
     spec:
       containers:
-        - name: cuser-service
+        - name: cproduct-service
           image: mrkendono/product:latest
           ports:
             - containerPort: 5002

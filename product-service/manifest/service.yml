@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cuser-service
+  name: cproduct-service
 spec:
   selector:
-    app: cuser-service
+    app: cproduct-service
   ports:
     - port: 5002
       targetPort: 5002
