@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cfrontend-app
+spec:
+  selector:
+    app: cfrontend-app
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30002
+  type: NodePort
+
